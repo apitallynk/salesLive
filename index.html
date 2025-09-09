@@ -39,7 +39,11 @@
   </style>
 </head>
 <body>
-  <div id="header">Last Refresh: <span id="lastRefresh">Loading...</span></div>
+  <div id="header">
+    Last Refresh: <span id="lastRefresh">Loading...</span>
+    <span id="version" style="margin-left: 15px; font-style: italic;"></span>
+  </div>
+
   <div id="vizContainer">
     <iframe id="vizFrame" src="" allowfullscreen></iframe>
   </div>
@@ -48,13 +52,16 @@
     document.addEventListener("DOMContentLoaded", function () {
       const refreshIntervalMinutes = 5; // Refresh every 5 minutes
       const vizUrl = "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam_17531989326770/Dashboard?:embed=true&:showVizHome=no&:toolbar=no&:fullscreen=true";
+      const version = "v1.0.0"; // ✅ Add your version number here
 
       const iframe = document.getElementById("vizFrame");
       const lastRefreshText = document.getElementById("lastRefresh");
+      const versionText = document.getElementById("version");
 
       function updateTime() {
         const now = new Date();
         lastRefreshText.textContent = now.toLocaleString();
+        versionText.textContent = `${version}`;
       }
 
       function loadDashboard() {
