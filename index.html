@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tableau Dashboard Fullscreen</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+      background-color: #fff;
+      color: #fff;
+    }
+    #header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      text-align: right;
+      font-size: 16px;
+      z-index: 10;
+    }
+    #vizContainer {
+      position: absolute;
+      top: 40px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">Last Refresh: <span id="lastRefresh">Loading...</span></div>
+  <div id="vizContainer">
+    <iframe id="vizFrame" src="" allowfullscreen></iframe>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const refreshIntervalMinutes = 5; // Refresh every 5 minutes
+      const vizUrl = "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam_17531989326770/Dashboard?:embed=true&:showVizHome=no&:toolbar=no&:fullscreen=true";
+
+      const iframe = document.getElementById("vizFrame");
+      const lastRefreshText = document.getElementById("lastRefresh");
+
+      function updateTime() {
+        const now = new Date();
+        lastRefreshText.textContent = now.toLocaleString();
+      }
+
+      function loadDashboard() {
+        // Add timestamp to URL to bypass cache
+        iframe.src = `${vizUrl}&_ts=${Date.now()}`;
+        updateTime();
+      }
+
+      loadDashboard(); // Initial load
+      setInterval(loadDashboard, refreshIntervalMinutes * 60 * 1000); // Auto-refresh
+    });
+  </script>
+</body>
+</html>
