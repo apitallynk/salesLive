@@ -1,78 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Tableau Dashboard Fullscreen</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau Slideshow</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
+      width: 100%;
       overflow: hidden;
-      font-family: sans-serif;
-      background-color: #fff;
-      color: #fff;
+      background-color: #000;
     }
-    #header {
+
+    .viz-frame {
       position: absolute;
       top: 0;
       left: 0;
-      right: 0;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      text-align: right;
-      font-size: 16px;
-      z-index: 10;
-    }
-    #vizContainer {
-      position: absolute;
-      top: 40px;
-      left: 0;
-      right: 0;
-      bottom: 0;
-    }
-    iframe {
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       border: none;
+      opacity: 0;
+      z-index: 1;
+      transition: opacity 1s ease-in-out;
     }
+
+    .viz-frame.active {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    #version {
+        position: absolute;
+        bottom: 10px;
+        left: 10px; /* was right: 10px; */
+        color: #ffffff;
+        font-size: 14px;
+        font-family: sans-serif;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 2px 6px;
+        border-radius: 4px;
+        z-index: 1000;
+    }
+
   </style>
 </head>
 <body>
-  <div id="header">
-    Last Refresh: <span id="lastRefresh">Loading...</span>
-    <span id="version" style="margin-left: 15px; font-style: italic;"></span>
-  </div>
 
-  <div id="vizContainer">
-    <iframe id="vizFrame" src="" allowfullscreen></iframe>
-  </div>
+  <!-- Two overlapping iframes -->
+  <iframe id="iframe1" class="viz-frame"></iframe>
+  <iframe id="iframe2" class="viz-frame"></iframe>
+
+  <div id="version">v1.0.0</div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const refreshIntervalMinutes = 5; // Refresh every 5 minutes
-      const vizUrl = "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam_17531989326770/Dashboard?:embed=true&:showVizHome=no&:toolbar=no&:fullscreen=true";
-      const version = "v1.0.1"; // ✅ Add your version number here
+    const VERSION = "v1.0.0";
+    const ROTATE_INTERVAL_SECONDS = 30;
+    const FADE_DELAY_MS = 500; // Delay before fading in new dashboard
 
-      const iframe = document.getElementById("vizFrame");
-      const lastRefreshText = document.getElementById("lastRefresh");
-      const versionText = document.getElementById("version");
+    const reportUrls = [
+      "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam2_17579693293460/Apps",
+      "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam2_17579693293460/OpenerFunded",
+      "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam2_17579693293460/CloserFunded",
+      "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam2_17579693293460/OpnerPast",
+      "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam2_17579693293460/CloserPast",
+      "https://prod-ca-a.online.tableau.com/t/caplynk/views/salesteam2_17579693293460/Transfers"
+    ];
 
-      function updateTime() {
-        const now = new Date();
-        lastRefreshText.textContent = now.toLocaleString();
-        versionText.textContent = `${version}`;
-      }
+    const iframe1 = document.getElementById("iframe1");
+    const iframe2 = document.getElementById("iframe2");
 
-      function loadDashboard() {
-        // Add timestamp to URL to bypass cache
-        iframe.src = `${vizUrl}&_ts=${Date.now()}`;
-        updateTime();
-      }
+    let currentIndex = 0;
+    let currentFrame = 1;
 
-      loadDashboard(); // Initial load
-      setInterval(loadDashboard, refreshIntervalMinutes * 60 * 1000); // Auto-refresh
-    });
+    function getUrlWithParams(baseUrl) {
+      const ts = Date.now();
+      return `${baseUrl}?:embed=true&:showVizHome=no&:toolbar=no&:fullscreen=true&_ts=${ts}`;
+    }
+
+    function rotate() {
+      const nextUrl = getUrlWithParams(reportUrls[currentIndex]);
+      const incoming = currentFrame === 1 ? iframe2 : iframe1;
+      const outgoing = currentFrame === 1 ? iframe1 : iframe2;
+
+      // Load the next report in the hidden iframe
+      incoming.src = nextUrl;
+
+      // Wait for it to load fully
+      incoming.onload = () => {
+        setTimeout(() => {
+          // Fade in new iframe, fade out old one
+          incoming.classList.add("active");
+          outgoing.classList.remove("active");
+
+          // Update current state
+          currentFrame = currentFrame === 1 ? 2 : 1;
+          currentIndex = (currentIndex + 1) % reportUrls.length;
+        }, FADE_DELAY_MS);
+      };
+    }
+
+    // Initial load
+    iframe1.src = getUrlWithParams(reportUrls[0]);
+    iframe1.classList.add("active");
+    currentIndex = 1;
+
+    // Start rotating dashboards
+    setInterval(rotate, ROTATE_INTERVAL_SECONDS * 1000);
   </script>
+
 </body>
 </html>
